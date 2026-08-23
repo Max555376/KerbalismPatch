@@ -1979,16 +1979,7 @@ namespace KERBALISM
 				}
 			}
 			return 0;
-		}
-
-		/// <summary>
-		/// Cached editor crew manifest. Prefer this over <c>CrewAssignmentDialog.GetManifest()</c>,
-		/// which is extremely expensive since KSP 1.11 (inventories) and can dirty PAWs every call.
-		/// See https://github.com/Kerbalism/Kerbalism/issues/864
-		/// </summary>
-		public static VesselCrewManifest EditorShipManifest => ShipConstruction.ShipManifest;
-
-		/// <summary>
+		}/// <summary>
 		/// Rebuild <see cref="ShipConstruction.ShipManifest"/> from live <see cref="Part.CrewCapacity"/>
 		/// and refresh the crew assignment UI. Stock only does this on attach/detach; Habitat changes
 		/// capacity when enabled/disabled without that, so seats would not appear until re-attached.
@@ -2005,6 +1996,7 @@ namespace KERBALISM
 			VesselCrewManifest oldManifest = ShipConstruction.ShipManifest;
 			VesselCrewManifest newManifest = new VesselCrewManifest();
 
+			bool capacityChanged = (oldManifest == null);
 			List<Part> shipParts = EditorLogic.fetch.ship.parts;
 			for (int i = 0; i < shipParts.Count; i++)
 			{
@@ -2024,6 +2016,15 @@ namespace KERBALISM
 					pcm.partCrew[j] = string.Empty;
 
 				newManifest.SetPartManifest(pcm.PartID, pcm);
+
+				// Détection de modification du nombre de sièges sur la pièce
+				if (oldManifest != null)
+				{
+					PartCrewManifest oldPcm = oldManifest.GetPartCrewManifest(p.craftID);
+					int oldCap = (oldPcm != null && oldPcm.partCrew != null) ? oldPcm.partCrew.Length : -1;
+					if (oldCap != crewCapacity)
+						capacityChanged = true;
+				}
 			}
 
 			if (oldManifest != null)
@@ -2055,12 +2056,20 @@ namespace KERBALISM
 
 					newManifest.UpdatePartManifest(oldPartId, oldPcm);
 				}
+
+				if (oldManifest.PartManifests.Count != newManifest.PartManifests.Count)
+					capacityChanged = true;
 			}
 
 			ShipConstruction.ShipManifest = newManifest;
 			editorCrewCacheFrame = -1;
-			CrewAssignmentDialog.Instance.RefreshCrewLists(newManifest, false, true);
-			GameEvents.onEditorShipCrewModified.Fire(newManifest);
+
+			// Ne forcer le rafraîchissement UI et l'évènement KSP QUE si la structure a changé
+			if (capacityChanged)
+			{
+				CrewAssignmentDialog.Instance.RefreshCrewLists(newManifest, false, true);
+				GameEvents.onEditorShipCrewModified.Fire(newManifest);
+			}
 		}
 
 		private static int editorCrewCacheFrame = -1;
