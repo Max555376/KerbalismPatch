@@ -1,6 +1,9 @@
 name: compile
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     paths:
       - '**/*.cs'
@@ -23,3 +26,9 @@ jobs:
       - uses: KSPModdingLibs/KSPBuildTools/.github/actions/compile@1.1.1
         with:
           solution-file-path: Kerbalism.sln
+
+      - name: Upload DLL Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kerbalism3-Patched
+          path: '**/Kerbalism3.dll'
