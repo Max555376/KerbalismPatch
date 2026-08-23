@@ -1979,7 +1979,16 @@ namespace KERBALISM
 				}
 			}
 			return 0;
-		}/// <summary>
+		}
+		
+		/// <summary>
+		/// Cached editor crew manifest. Prefer this over <c>CrewAssignmentDialog.GetManifest()</c>,
+		/// which is extremely expensive since KSP 1.11 (inventories) and can dirty PAWs every call.
+		/// See https://github.com/Kerbalism/Kerbalism/issues/864
+		/// </summary>
+		public static VesselCrewManifest EditorShipManifest => ShipConstruction.ShipManifest;
+
+		/// <summary>
 		/// Rebuild <see cref="ShipConstruction.ShipManifest"/> from live <see cref="Part.CrewCapacity"/>
 		/// and refresh the crew assignment UI. Stock only does this on attach/detach; Habitat changes
 		/// capacity when enabled/disabled without that, so seats would not appear until re-attached.
