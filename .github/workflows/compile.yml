@@ -31,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Kerbalism3-Patched
-          path: '**/Kerbalism3.dll'
+          path: '**/*.dll'
